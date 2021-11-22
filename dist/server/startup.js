@@ -4,11 +4,36 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var express_1 = __importDefault(require("express"));
-var cors_1 = __importDefault(require("cors"));
-var router_1 = __importDefault(require("./router"));
-var app = (0, express_1.default)();
-app.use((0, cors_1.default)({ origin: '*' }));
-app.use(express_1.default.json());
-(0, router_1.default)(app);
-exports.default = app;
+require('dotenv').config();
+var Server = /** @class */ (function () {
+    /**
+     * @param port Port Application listens on
+     * @param middleware Array of middleware to be applied to app
+     * @param routes Array of express.Router objects for application routes
+     */
+    function Server(port, middlewares, routes) {
+        this.port = port;
+        this.app = (0, express_1.default)();
+        this.setUpMiddlewares(middlewares);
+        this.setUpRoutes(routes);
+    }
+    Server.prototype.setUpMiddlewares = function (mware) {
+        var _this = this;
+        mware.forEach(function (middleware) { return _this.app.use(middleware); });
+    };
+    Server.prototype.setUpRoutes = function (routes) {
+        var _this = this;
+        routes.forEach(function (resource) {
+            var a = resource.controller.routes();
+            _this.app.use(resource.basePath, resource.controller.router);
+        });
+    };
+    Server.prototype.init = function () {
+        this.app.listen(this.port, function () {
+            console.log("The application is listening on port " + process.env.PORT);
+        });
+    };
+    return Server;
+}());
+exports.default = Server;
 //# sourceMappingURL=startup.js.map

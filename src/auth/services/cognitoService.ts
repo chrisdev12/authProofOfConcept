@@ -1,13 +1,13 @@
-import IAuth from '../IAuth';
-import { CognitoUserPool, ICognitoUserPoolData, NodeCallback }  from 'amazon-cognito-identity-js';
-import UserRequest from '../models/newUser';
+import { CognitoUserPool, ICognitoUserPoolData }  from 'amazon-cognito-identity-js';
+import IAuthService from './iAuthService';
+import { UserRequest}  from '../models/authUser';
 require('dotenv').config()
 
-export default class CognitoService implements IAuth {
-    provider: CognitoUserPool;
-    region: string = 'us-east-1';
-    userPoolId : string = process.env.UserPoolID || "";
-    ClientId : string = process.env.ClientId || "";
+export default class CognitoService implements IAuthService {
+    private provider: CognitoUserPool;
+    private region: string = 'us-east-1';
+    private userPoolId : string = process.env.UserPoolID || "";
+    private ClientId : string = process.env.ClientId || "";
 
     constructor(){
         const poolData: ICognitoUserPoolData = {
@@ -17,7 +17,6 @@ export default class CognitoService implements IAuth {
         this.provider = new CognitoUserPool(poolData)
     }
 
-    token: string = "";
     signUp(newUser: UserRequest) : Promise<string> {
         return new Promise<any>((resolve, reject) => {
             this.provider.signUp(newUser.email, newUser.password, [], [], (err, result: any) => 

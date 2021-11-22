@@ -1,6 +1,6 @@
-import UserRequest from "./models/newUser";
+import { UserRequest } from "../models/authUser";
 
-export default interface UserAuthorization {
+export default interface IAuthService {
     signUp(user : UserRequest): Promise<string>;
     signIn(user : UserRequest) : Promise<string>
 }

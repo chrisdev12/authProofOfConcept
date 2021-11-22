@@ -1,9 +1,9 @@
-import server from './server/startup'
-import assert from 'assert';
-require('dotenv').config()
+import Server from './server/startup'
+import express from 'express';
+import cors from 'cors';
+import routes from './server/routes';
+const generalMiddlewares = [cors({ origin: '*' }), express.json()]
+const port =  process.env.PORT || '';
+const server = new Server(port, generalMiddlewares, routes);
 
-assert.ok(process.env.PORT, "port isn't provided"); 
-
-server.listen(process.env.PORT, () => {
-  console.log(`The application is listening on port ${process.env.PORT}`);
-});
+server.init();

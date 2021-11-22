@@ -43,7 +43,6 @@ var CognitoService = /** @class */ (function () {
         this.region = 'us-east-1';
         this.userPoolId = process.env.UserPoolID || "";
         this.ClientId = process.env.ClientId || "";
-        this.token = "";
         var poolData = {
             UserPoolId: this.userPoolId,
             ClientId: this.ClientId,
