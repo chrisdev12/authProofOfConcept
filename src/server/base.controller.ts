@@ -6,5 +6,10 @@ export default abstract class BaseController {
         this.router =  Router();
     }
 
+    /**
+     * @goal getRoutes method should be used to define and return the routes/resources 
+     * that will be used on the controller
+     */
+
     abstract getRoutes() : Router;
 }

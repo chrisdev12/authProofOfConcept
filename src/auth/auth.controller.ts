@@ -1,10 +1,10 @@
-import { Response, Router } from "express";
+import { Response, Router, Request } from "express";
 import BaseController from '../server/base.controller';
+import { successResponse, errorResponse } from "../server/types/apiResponses";
 import CognitoService from './services/cognitoService';
 import IAuthService from "./services/iAuthService";
 
 export default class AuthController extends BaseController {
-  private signUpResource: string = "/signUp";
   private authService : IAuthService;
 
   constructor(){
@@ -14,17 +14,30 @@ export default class AuthController extends BaseController {
   }
 
   getRoutes(): Router {
-    this.router.post(this.signUpResource, (req: any, res: Response) => {
-      this.authService
-        .signUp({ email: req.body.email, password: req.body.password })
-        .then((result) => res.send(result))
-        .catch((error) => res.status(500).json({ error }));
-    });
-
-    this.router.get("", (_, res: Response) => {
-      return res.json({ g: 2324 });
-    });
+    this.router.post("/signup", this.signUpUser);
+    this.router.post("", this.signInUser);
 
     return this.router;
   };
+
+  private signUpUser = async (req: Request, res: Response) : Promise<Response> => {
+    try {
+      await this.authService.signUp({ email: req.body.email, password: req.body.password });
+      
+      return successResponse(res, "user created");
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, error);
+    }
+  }
+
+  private signInUser = async (req: Request, res: Response) : Promise<Response> => {
+    try {
+      const token = await this.authService.signIn({ email: req.body.email, password: req.body.password });
+      
+      return successResponse(res, token);
+    } catch (error) {
+      return errorResponse(res, error, 401);
+    }
+  }
 }

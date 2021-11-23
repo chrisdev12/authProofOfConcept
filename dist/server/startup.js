@@ -24,8 +24,7 @@ var Server = /** @class */ (function () {
     Server.prototype.setUpRoutes = function (routes) {
         var _this = this;
         routes.forEach(function (resource) {
-            var a = resource.controller.routes();
-            _this.app.use(resource.basePath, resource.controller.router);
+            return _this.app.use(resource.basePath, resource.controller.getRoutes());
         });
     };
     Server.prototype.init = function () {

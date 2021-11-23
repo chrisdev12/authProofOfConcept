@@ -1,4 +1,4 @@
-import { CognitoUserPool, ICognitoUserPoolData }  from 'amazon-cognito-identity-js';
+import { CognitoUserPool, ICognitoUserPoolData, AuthenticationDetails, CognitoUser, ICognitoUserData }  from 'amazon-cognito-identity-js';
 import IAuthService from './iAuthService';
 import { UserRequest}  from '../models/authUser';
 require('dotenv').config()
@@ -7,12 +7,12 @@ export default class CognitoService implements IAuthService {
     private provider: CognitoUserPool;
     private region: string = 'us-east-1';
     private userPoolId : string = process.env.UserPoolID || "";
-    private ClientId : string = process.env.ClientId || "";
+    private clientId : string = process.env.ClientId || "";
 
     constructor(){
         const poolData: ICognitoUserPoolData = {
             UserPoolId : this.userPoolId,
-            ClientId : this.ClientId,
+            ClientId : this.clientId,
         }
         this.provider = new CognitoUserPool(poolData)
     }
@@ -35,7 +35,30 @@ export default class CognitoService implements IAuthService {
         }); 
     };
 
-    async signIn(user: UserRequest) : Promise<string> {
-        return "s";
+    signIn(user: UserRequest) : Promise<string> {
+        const authDetails = new AuthenticationDetails({
+            Username: user.email,
+            Password: user.password
+        });
+        const userData: ICognitoUserData = {
+            Username: user.email,
+            Pool: this.provider
+        };
+        const cognitoUser = new CognitoUser(userData);
+
+        return new Promise<string>((resolve, reject) => {
+            cognitoUser.authenticateUser(authDetails, {
+                onSuccess: function (result) {
+                    console.log('access token + ' + result.getAccessToken().getJwtToken());
+                    console.log('id token + ' + result.getIdToken().getJwtToken());
+                    console.log('refresh token + ' + result.getRefreshToken().getToken());
+                    return resolve(result.getAccessToken().getJwtToken());
+                },
+                onFailure: function(err) {
+                    console.log(err);
+                    reject(err);
+                },
+            });
+        })
     }
 }

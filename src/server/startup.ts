@@ -26,10 +26,9 @@ export default class Server {
     }
 
     private setUpRoutes(routes: Array<ControllerRoute>) {
-        routes.forEach((resource) => {
-            this.app.use(resource.basePath, resource.controller.getRoutes());
-            this.app.use('', (req, res) => res.json({a_: 1}))
-        });
+        routes.forEach((resource) => 
+            this.app.use(resource.basePath, resource.controller.getRoutes())
+        );
     }
 
     public init() {
