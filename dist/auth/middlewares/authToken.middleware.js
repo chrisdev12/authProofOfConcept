@@ -54,78 +54,42 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var base_controller_1 = __importDefault(require("../common/base.controller"));
-var cognitoService_1 = __importDefault(require("./services/cognitoService"));
-var AuthController = /** @class */ (function (_super) {
-    __extends(AuthController, _super);
-    function AuthController() {
+var base_controller_1 = __importDefault(require("../../common/base.controller"));
+var AuthTokenMiddleware = /** @class */ (function (_super) {
+    __extends(AuthTokenMiddleware, _super);
+    function AuthTokenMiddleware(tokenValidator) {
         var _this = _super.call(this) || this;
-        _this.registerNewUser = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var error_1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+        _this.tokenValidator = tokenValidator;
+        _this.verify = function (req, res, next) { return __awaiter(_this, void 0, void 0, function () {
+            var accessToken, token, isTokenValid, error_1;
+            var _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, this.authService.register({
-                                email: req.body.email,
-                                password: req.body.password,
-                            })];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/, this.successResponse(res, "user created")];
-                    case 2:
-                        error_1 = _a.sent();
-                        return [2 /*return*/, this.errorResponse(res, error_1)];
-                    case 3: return [2 /*return*/];
-                }
-            });
-        }); };
-        _this.login = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var token, error_2;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, this.authService.login({
-                                email: req.body.email,
-                                password: req.body.password,
-                            })];
-                    case 1:
-                        token = _a.sent();
-                        return [2 /*return*/, this.successResponse(res, token)];
-                    case 2:
-                        error_2 = _a.sent();
-                        return [2 /*return*/, this.errorResponse(res, error_2, 401)];
-                    case 3: return [2 /*return*/];
-                }
-            });
-        }); };
-        _this.refreshSession = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var refeshSessionRequest, token, error_3;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        refeshSessionRequest = {
-                            email: req.body.email,
-                            refreshToken: req.body.refreshToken,
+                        _b.trys.push([0, 2, , 3]);
+                        accessToken = (_a = req.headers["authorization"]) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
+                        if (!accessToken)
+                            throw "accessToken is required";
+                        token = {
+                            accessToken: accessToken,
                         };
-                        return [4 /*yield*/, this.authService.refreshSession(refeshSessionRequest)];
+                        return [4 /*yield*/, this.tokenValidator.verifyToken(token)];
                     case 1:
-                        token = _a.sent();
-                        return [2 /*return*/, this.successResponse(res, token)];
+                        isTokenValid = _b.sent();
+                        if (!isTokenValid)
+                            throw "token invalid";
+                        return [2 /*return*/, next()];
                     case 2:
-                        error_3 = _a.sent();
-                        return [2 /*return*/, this.errorResponse(res, error_3, 401)];
+                        error_1 = _b.sent();
+                        return [2 /*return*/, this.errorResponse(res, error_1, 401)];
                     case 3: return [2 /*return*/];
                 }
             });
         }); };
-        var cognitoService = new cognitoService_1.default();
-        _this.authService = cognitoService;
+        _this.tokenValidator = tokenValidator;
         return _this;
     }
-    return AuthController;
+    return AuthTokenMiddleware;
 }(base_controller_1.default));
-exports.default = AuthController;
-//# sourceMappingURL=auth.controller.js.map
+exports.default = AuthTokenMiddleware;
+//# sourceMappingURL=authToken.middleware.js.map

@@ -1,18 +1,21 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   CognitoUserPool,
   ICognitoUserPoolData,
   AuthenticationDetails,
   CognitoUser,
   ICognitoUserData,
+  CognitoRefreshToken,
 } from "amazon-cognito-identity-js";
-import IAuthService from "./iAuthService";
-import { UserRequest } from "../models/authUser";
+import IAuth from "../interfaces/iAuth";
+import { RefreshSession, UserRequest } from "../models/authUser";
 import dotenv from "dotenv";
+import { AuthSession } from "../models/authSession";
+
 dotenv.config();
 
-export default class CognitoService implements IAuthService {
+export default class CognitoService implements IAuth {
   private provider: CognitoUserPool;
-  private region = "us-east-1";
   private userPoolId: string = process.env.UserPoolID || "";
   private clientId: string = process.env.ClientId || "";
 
@@ -24,7 +27,7 @@ export default class CognitoService implements IAuthService {
     this.provider = new CognitoUserPool(poolData);
   }
 
-  signUp(newUser: UserRequest): Promise<string> {
+  register(newUser: UserRequest): Promise<string> {
     return new Promise<any>((resolve, reject) => {
       this.provider.signUp(
         newUser.email,
@@ -47,7 +50,7 @@ export default class CognitoService implements IAuthService {
     });
   }
 
-  signIn(user: UserRequest): Promise<string> {
+  login(user: UserRequest): Promise<AuthSession> {
     const authDetails = new AuthenticationDetails({
       Username: user.email,
       Password: user.password,
@@ -58,20 +61,43 @@ export default class CognitoService implements IAuthService {
     };
     const cognitoUser = new CognitoUser(userData);
 
-    return new Promise<string>((resolve, reject) => {
+    return new Promise<AuthSession>((resolve, reject) => {
       cognitoUser.authenticateUser(authDetails, {
-        onSuccess: function (result) {
-          console.log(
-            "access token + " + result.getAccessToken().getJwtToken()
-          );
-          console.log("id token + " + result.getIdToken().getJwtToken());
-          console.log("refresh token + " + result.getRefreshToken().getToken());
-          return resolve(result.getAccessToken().getJwtToken());
+        onSuccess: (result) => {
+          const authSession: AuthSession = {
+            accessToken: result.getAccessToken().getJwtToken(),
+            refreshToken: result.getRefreshToken().getToken(),
+            idToken: result.getIdToken().getJwtToken(),
+          };
+
+          return resolve(authSession);
         },
-        onFailure: function (err) {
-          console.log(err);
-          reject(err);
-        },
+        onFailure: (err) => reject(err),
+      });
+    });
+  }
+
+  refreshSession(refreshRequest: RefreshSession): Promise<AuthSession> {
+    const refreshToken = new CognitoRefreshToken({
+      RefreshToken: refreshRequest.refreshToken,
+    });
+    const userData: ICognitoUserData = {
+      Username: refreshRequest.email,
+      Pool: this.provider,
+    };
+    const cognitoUser = new CognitoUser(userData);
+
+    return new Promise<AuthSession>((resolve, reject) => {
+      cognitoUser.refreshSession(refreshToken, (err, session) => {
+        if (err) return reject(err);
+
+        const authSession: AuthSession = {
+          accessToken: session.accessToken.jwtToken,
+          idToken: session.idToken.jwtToken,
+          refreshToken: session.refreshToken.token,
+        };
+
+        return resolve(authSession);
       });
     });
   }

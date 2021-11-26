@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Application } from "express";
 import express from "express";
-import { ControllerRoute } from "./types/controllerRoute";
+import { ControllerRoute } from "./app.router";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -29,7 +29,7 @@ export default class Server {
 
   private setUpRoutes(routes: Array<ControllerRoute>) {
     routes.forEach((resource) =>
-      this.app.use(resource.basePath, resource.controller.getRoutes())
+      this.app.use(resource.basePath, resource.moduleRouter)
     );
   }
 
